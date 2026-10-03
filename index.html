@@ -2,49 +2,451 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Goat Profit & Loss</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Crypto Goat</title>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
-    <script defer src="script.js"></script>
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            overflow: hidden;
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100%;
+            background: #050505;
+            color: #ffffff;
+            font-family: Arial, Helvetica, sans-serif;
+            overflow-x: hidden;
+        }
+
+        body {
+            position: relative;
+        }
+
         #container {
-            position: absolute;
-            top: 50px;
-            left: 50%;
-            transform: translateX(-50%);
+            position: fixed;
+            inset: 0;
             width: 100%;
             height: 100%;
+            z-index: 1;
+            pointer-events: auto;
         }
-        #controls {
+
+        #container canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .topbar {
             position: absolute;
-            bottom: 10px;
-            width: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 22px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -0.8px;
+        }
+
+        .logo span {
+            opacity: 0.45;
+        }
+
+        .badge {
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(10,10,10,0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #aaa;
+        }
+
+        .hero {
+            position: absolute;
+            top: 92px;
+            left: 0;
+            right: 0;
             text-align: center;
-            background: rgba(255, 255, 255, 0.8);
+            padding: 0 20px;
+            pointer-events: none;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(32px, 9vw, 64px);
+            line-height: 0.95;
+            letter-spacing: -3px;
+            font-weight: 900;
+        }
+
+        .hero p {
+            margin: 12px auto 0;
+            max-width: 420px;
+            color: #888;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #controls {
+            position: fixed;
+            z-index: 10;
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            width: min(620px, 100%);
+            padding: 16px;
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
+            pointer-events: auto;
+        }
+
+        .panel {
+            background: rgba(8,8,8,0.88);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 0 -15px 50px rgba(0,0,0,0.35);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .field label {
+            display: block;
+            color: #777;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin: 0 0 7px 4px;
+        }
+
+        .field input {
+            width: 100%;
+            height: 48px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 13px;
+            outline: none;
+            background: #111;
+            color: white;
+            padding: 0 13px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .field input:focus {
+            border-color: rgba(255,255,255,0.35);
+        }
+
+        .presets {
+            display: flex;
+            gap: 7px;
+            overflow-x: auto;
+            margin-top: 10px;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+        }
+
+        .presets::-webkit-scrollbar {
+            display: none;
+        }
+
+        .preset {
+            flex: 0 0 auto;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: #101010;
+            color: #999;
+            border-radius: 999px;
+            padding: 7px 10px;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .preset:active {
+            transform: scale(0.96);
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            margin-top: 11px;
+        }
+
+        button {
+            height: 48px;
+            border: none;
+            border-radius: 13px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        #calculateBtn {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        #resetBtn {
+            background: #171717;
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #resultCard {
+            display: none;
+            margin-top: 11px;
+            padding: 16px;
+            border-radius: 17px;
+            background: #101010;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .resultTop {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .status {
+            font-size: 11px;
+            color: #777;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        #statusText {
+            margin-top: 4px;
+            font-size: 20px;
+            font-weight: 900;
+        }
+
+        #percentage {
+            text-align: right;
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+            margin-top: 13px;
+        }
+
+        .stat {
+            background: #161616;
+            border-radius: 11px;
             padding: 10px;
+            min-width: 0;
+        }
+
+        .stat span {
+            display: block;
+            color: #666;
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .shareBtn {
+            width: 100%;
+            margin-top: 10px;
+            background: #1b1b1b;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #hint {
+            text-align: center;
+            color: #555;
+            font-size: 10px;
+            margin-top: 9px;
+        }
+
+        @media (max-width: 380px) {
+            .hero {
+                top: 80px;
+            }
+
+            .hero h1 {
+                font-size: 34px;
+            }
+
+            #controls {
+                padding: 10px;
+            }
+
+            .panel {
+                border-radius: 20px;
+                padding: 13px;
+            }
+
+            .field input,
+            button {
+                height: 44px;
+            }
         }
     </style>
 </head>
+
 <body>
+
     <div id="container"></div>
-    
-    <div id="controls">
-        <label for="initial">Initial Investment ($):</label>
-        <input type="number" id="initial" placeholder="Enter initial amount">
-        
-        <label for="current">Current Value ($):</label>
-        <input type="number" id="current" placeholder="Enter current value">
-        
-        <button onclick="calculate()">Calculate</button>
-        
-        <p id="result"></p>
+
+    <div class="overlay">
+
+        <div class="topbar">
+            <div class="logo">CRYPTO<span>GOAT</span></div>
+            <div class="badge">P&L CHECKER</div>
+        </div>
+
+        <div class="hero">
+            <h1>How much of a<br>GOAT are you?</h1>
+            <p>
+                Enter your investment and current value.
+                Let the goat judge your portfolio.
+            </p>
+        </div>
+
     </div>
+
+    <div id="controls">
+
+        <div class="panel">
+
+            <div class="inputs">
+
+                <div class="field">
+                    <label for="initial">Invested</label>
+                    <input
+                        type="number"
+                        id="initial"
+                        placeholder="1000"
+                        min="0"
+                        step="any"
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="current">Now Worth</label>
+                    <input
+                        type="number"
+                        id="current"
+                        placeholder="4250"
+                        min="0"
+                        step="any"
+                    >
+                </div>
+
+            </div>
+
+            <div class="presets">
+                <button class="preset" onclick="setPreset(100, 500)">5X</button>
+                <button class="preset" onclick="setPreset(100, 1000)">10X</button>
+                <button class="preset" onclick="setPreset(1000, 5000)">5X</button>
+                <button class="preset" onclick="setPreset(1000, 100)">-90%</button>
+                <button class="preset" onclick="setPreset(1000, 10000)">10X</button>
+            </div>
+
+            <div class="actions">
+                <button id="calculateBtn" onclick="calculate()">CHECK MY GOAT</button>
+                <button id="resetBtn" onclick="resetApp()">RESET</button>
+            </div>
+
+            <div id="resultCard">
+
+                <div class="resultTop">
+
+                    <div>
+                        <div class="status">GOAT STATUS</div>
+                        <div id="statusText">CERTIFIED GOAT</div>
+                    </div>
+
+                    <div id="percentage">+0%</div>
+
+                </div>
+
+                <div class="stats">
+
+                    <div class="stat">
+                        <span>P&L</span>
+                        <strong id="profitLoss">$0</strong>
+                    </div>
+
+                    <div class="stat">
+                        <span>Multiplier</span>
+                        <strong id="multiplier">1.00X</strong>
+                    </div>
+
+                    <div class="stat">
+                        <span>Invested</span>
+                        <strong id="investedValue">$0</strong>
+                    </div>
+
+                </div>
+
+                <button class="shareBtn" onclick="shareResult()">
+                    SHARE MY RESULT
+                </button>
+
+            </div>
+
+            <div id="hint">
+                Drag the goat to rotate it
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
 </body>
 </html>
